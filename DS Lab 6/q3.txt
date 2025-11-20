@@ -1,0 +1,7 @@
+To manage resturant orders eficiently in the order they arive, 
+a queue is ideal since it follows FIFO. 
+Each order contain items with quantites. 
+Use enqueue(order) to add new orders at rear and dequeue() to remove from the front. 
+To prevent overflo, use dynamic memory or check with isFull(); 
+to avoid underflow, use isEmpty(). As orders are processd, 
+store them seperately and use printProcessed() to display all in original order for smooth fulfillment.

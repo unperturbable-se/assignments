@@ -1,0 +1,7 @@
+for this scenario, a FIFO (First-In-First-Out) queue is most suitable.
+
+Messages arrive in order and must be processed one at a time in the exact sequence they came in.
+
+FIFO ensures the earliest message is processed first before moving on to the next, maintaining order.
+
+This fits a classic queue behavior, where the oldest message waits at the front and new messages are added at the rear.
