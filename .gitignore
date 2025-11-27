@@ -1,3 +1,4 @@
 # Ignore all .vscode folders anywhere in the repo
 **/.vscode/
 *.exe
+**/tempCodeRunnerFile.cpp
