@@ -1,0 +1,55 @@
+@startuml
+|Customer Service Clerk|
+start
+:Enter customer information;
+|System|
+:Find policy and display details;
+|Customer Service Clerk|
+:Verify policy;
+if (Policy is current?) then (no)
+  :Request payment/Collect info;
+else (yes)
+endif
+
+|Customer Service Clerk|
+:Enter vehicle identification;
+|System|
+if (Car has known standard?) then (no)
+  |Customer Service Clerk|
+  :Refer to underwriting;
+  stop
+else (yes)
+  :Validate car standard;
+endif
+
+|Customer Service Clerk|
+repeat
+  :Enter coverage type/amount;
+  |System|
+  :Validate coverage;
+backward:Ask for changed amount;
+repeat while (Coverage in range?) is (no)
+
+|Customer Service Clerk|
+:Indicate coverages complete;
+|System|
+if (Combination valid?) then (no)
+  |Customer Service Clerk|
+  goto repeat
+else (yes)
+  :Combination validation;
+endif
+
+|Customer Service Clerk|
+:Invoke "Add New Person" (if needed);
+:Change driver percentages;
+|System|
+:Update driver information;
+
+|Customer Service Clerk|
+:Indicate everything is complete;
+|System|
+:Calculate new premium;
+:Print new statement;
+stop
+@enduml

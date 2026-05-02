@@ -1,0 +1,26 @@
+@startuml
+actor Emily
+participant "Mountain Retreats" as Platform
+database "Calendar System" as Calendar
+boundary "Payment Gateway" as Payment
+actor "Jack (Owner)" as Jack
+
+Emily -> Platform : register(details)
+Platform --> Emily : confirmRegistration
+
+Emily -> Platform : searchProperties(location, dates)
+Platform --> Emily : showListings(Cozy Cabin)
+
+Emily -> Platform : requestDetails(Cozy Cabin)
+Platform -> Calendar : checkAvailability(dates)
+Calendar --> Platform : isAvailable
+Platform --> Emily : confirmAvailability
+
+Emily -> Platform : createReservation()
+Platform --> Emily : bookingID
+
+Emily -> Payment : submitPayment(details)
+Payment --> Emily : paymentSuccess
+
+Platform -> Jack : notifyReview(feedback)
+@enduml

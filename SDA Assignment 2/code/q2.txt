@@ -1,0 +1,23 @@
+@startuml
+actor User
+participant System
+database Database
+
+== Scenario 1: Login ==
+User -> System: loginRequest
+System -> Database: queryCredentials
+Database --> System: credentials
+alt valid
+    System --> User: successMessage
+else invalid
+    System --> User: failureMessage
+end
+
+== Scenario 2: Update ==
+User -> System: initiateUpdate
+System -> Database: validateUpdate
+Database --> System: validationResult
+System -> Database: updateRecord
+Database --> System: confirmUpdate
+System --> User: finalSuccess
+@enduml

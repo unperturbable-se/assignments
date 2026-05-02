@@ -1,0 +1,1 @@
+ml.exe /I"C:\Users\Raedo\Documents\dev\compilers\irvine" "q4.asm" /link /LIBPATH:"C:\Users\Raedo\Documents\dev\compilers\irvine" /SUBSYSTEM:CONSOLE Irvine32.lib kernel32.lib User32.lib gdi32.lib
