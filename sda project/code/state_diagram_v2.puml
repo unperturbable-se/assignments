@@ -1,0 +1,129 @@
+@startuml
+hide empty description
+
+[*] --> SystemSetup
+
+state SystemSetup {
+    [*] --> InstallingDependencies : Run SMART_SETUP\n(Python libs, Playwright, Chromium)
+    InstallingDependencies --> VerifyingInstallation : Run VERIFY_INSTALL\n(APIs, Modules, Browser)
+    VerifyingInstallation --> InstallError : [Verification Failed]
+    InstallError --> InstallingDependencies : Retry Setup
+    VerifyingInstallation --> GoogleAuthentication : [All Checks Passed]
+    GoogleAuthentication --> ScheduleConfiguration : User logs into Google\n(Save session cookies + bot profile)
+    ScheduleConfiguration --> [*] : schedule.json configured\n(class, time, platform, link,\ntelegram_id, gemini_key, credentials)
+}
+
+SystemSetup --> IdleScheduler : Setup Complete
+
+state IdleScheduler {
+    [*] --> PollingTime
+    PollingTime --> PollingTime : [current_time != class_time]\nWait loop continues
+    PollingTime --> HumanDelay : [current_time == class_time]
+    HumanDelay --> HumanDelay : Simulate human behaviour\nWait 2 minutes before joining
+    PollingTime --> LateJoinCheck : [class_time already passed]
+    LateJoinCheck --> HumanDelay : [Within 20-min late tolerance]
+    LateJoinCheck --> ClassMissed : [Beyond 20-min late window]
+    ClassMissed --> TelegramMissedClass : Log missed class + timestamp
+    TelegramMissedClass --> PollingTime : Send Telegram [Class Missed]\nContinue scheduling
+    PollingTime --> ExceptionLogger : [Invalid Link / Network Error]
+    ExceptionLogger --> PollingTime : Log saved for debugging
+}
+
+IdleScheduler --> ClassJoining : [current_time == class_time + 2 min delay]
+IdleScheduler --> ClassJoining : [Late join within 20-min tolerance]
+
+state ClassJoining {
+    [*] --> OpeningBrowser : Playwright + Chromium launched\n(Using saved Google session cookies)
+    OpeningBrowser --> LoadingMeetingURL : Browser ready
+    LoadingMeetingURL --> JoinError : [Network failure / Invalid link]
+    JoinError --> TelegramJoinFail : Log error details
+    TelegramJoinFail --> [*] : Send Telegram [Class Join Failed]\nAbort this session
+    LoadingMeetingURL --> ConfiguringMeeting : [Page loaded successfully]
+    ConfiguringMeeting --> MicOff : Start configuration sequence
+    MicOff --> CamOff : Turn OFF Microphone\n(Prevent audio broadcast)
+    CamOff --> ChatOpen : Turn OFF Camera\n(Prevent video broadcast)
+    ChatOpen --> CaptionsOn : Open Chatbox\n(Required for attendance + AI answers)
+    CaptionsOn --> CaptionsUrdu : Enable Live Captions\n(Required for Whisper processing)
+    CaptionsUrdu --> [*] : Set Captions Language to Urdu\n(Localization for student context)
+}
+
+ClassJoining --> ActiveClassMonitoring : Send Telegram [Class Joined]\nLog join timestamp
+
+state ActiveClassMonitoring {
+
+    state AttendanceManager {
+        [*] --> ScanningForAttendance
+        ScanningForAttendance --> AttendanceTriggerVoice : Voice [Whisper detects keywords:\n"attendance" / "roll call" / "present"]
+        ScanningForAttendance --> AttendanceTriggerName : Voice [Whisper detects student own name]
+        ScanningForAttendance --> AttendanceTriggerChat : Chat [4-5 "Present" burst messages scraped]
+        AttendanceTriggerVoice --> MarkingAttendance : Valid voice keyword trigger
+        AttendanceTriggerName --> MarkingAttendance : Name-based trigger confirmed
+        AttendanceTriggerChat --> MarkingAttendance : Chat burst pattern confirmed
+        MarkingAttendance --> AttendanceMarked : Action [Type "Present" in chat]
+        MarkingAttendance --> AttendanceFailed : [Chat send error]
+        AttendanceMarked --> ResettingTrigger : Send Telegram [Attendance Marked]
+        AttendanceFailed --> ResettingTrigger : Send Telegram [Attendance Missed]
+        ResettingTrigger --> ScanningForAttendance : [Wait 5 minutes then re-check]
+    }
+
+    --
+
+    state AIQuestionResponder {
+        [*] --> ListeningToTeacher
+        ListeningToTeacher --> TranscribingSpeech : Voice [Audio chunk captured]
+        TranscribingSpeech --> QuestionDetected : Whisper converts speech to text
+        QuestionDetected --> CallingGemini : API Call [Send question to Gemini API]
+        CallingGemini --> AnswerReady : [Gemini returns answer]
+        CallingGemini --> GeminiFailed : [Gemini API error / rate limit]
+        GeminiFailed --> CallingGroq : Fallback [Send to Groq API\n(Higher rate limits / Faster LLM)]
+        CallingGroq --> AnswerReady : [Groq returns answer]
+        CallingGroq --> APITotalFail : [Groq also failed]
+        APITotalFail --> ListeningToTeacher : Log error\nSkip response this round
+        AnswerReady --> ReplyingInChat : Action [Bot types AI answer automatically]
+        ReplyingInChat --> ListeningToTeacher : Answer posted\nResume listening
+    }
+
+    --
+
+    state ExitMonitor {
+        [*] --> CheckingExitConditions
+        CheckingExitConditions --> CheckingExitConditions : [Participants >= 5]\nAND [Time < class_end + 5 min]
+        CheckingExitConditions --> ExitTriggered : [Participants < 5]
+        CheckingExitConditions --> ExitTriggered : [class_time + 5 min buffer elapsed]
+        ExitTriggered --> ExitTriggered : Exit condition confirmed\nSignalling leave class
+    }
+
+}
+
+ActiveClassMonitoring --> ExceptionHandling : Exception [Network / API Failure / Login Timeout]
+
+state ExceptionHandling {
+    [*] --> LoggingError
+    LoggingError --> IdentifyingError : Write to log file with timestamp
+    IdentifyingError --> NetworkRecovery : [Network failure detected]
+    IdentifyingError --> APIRecovery : [API failure — Gemini / Groq]
+    IdentifyingError --> LoginRecovery : [Google login timeout / session expired]
+    IdentifyingError --> LinkRecovery : [Invalid meeting link]
+    NetworkRecovery --> [*] : Wait for reconnection\nResume on network restored
+    APIRecovery --> [*] : Activate fallback API\nRetry with Groq
+    LoginRecovery --> [*] : Trigger Google re-login\nRestore session cookies
+    LinkRecovery --> [*] : Send Telegram [Class Missed]\nSkip this class
+}
+
+ExceptionHandling --> IdleScheduler : Action [Log stored for debugging]\nResume scheduler
+
+ActiveClassMonitoring --> LeavingClass : Guard [Participants < 5]\nOR [Class time finished + 5 min buffer]
+
+state LeavingClass {
+    [*] --> ClosingBrowser : Bot clicks Leave button\n(Browser automation via Playwright)
+    ClosingBrowser --> LeaveError : [Browser / network error on leave]
+    LeaveError --> ClosingBrowser : Retry leave button
+    ClosingBrowser --> SendingSummaryLogs : Successfully left class
+    SendingSummaryLogs --> CheckingNextClass : Send Telegram [Class Left]\n+ Duration log (e.g. 1hr 20min)\n+ Attendance Marked / Missed status\n+ Timestamp
+    CheckingNextClass --> [*] : Query schedule.json\nfor next class entry
+}
+
+LeavingClass --> IdleScheduler : [Next class exists]\nAllow 20-min late joining window
+LeavingClass --> [*] : [No more classes scheduled today]
+
+@enduml

@@ -1,0 +1,279 @@
+\documentclass[12pt]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in, headheight=15pt}
+\usepackage{titlesec}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+% --- Header and Footer ---
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{}
+\rhead{Software Requirements Specifications}
+\cfoot{Page \thepage}
+% --- Custom formatting ---
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection.}{0.5em}{}
+
+\begin{document}
+
+% --- Title Page ---
+\begin{titlepage}
+    \centering
+    \vspace*{0.5in}
+    {\large \textbf{National University of Computer and Emerging Sciences}} \\
+    \vspace{1in}
+    {\Huge \textbf{Software Requirement Specifications}} \\
+    \vspace{0.5in}
+    {\LARGE \textbf{Autonomous Multimodal AI Proxy Agent \\ for Automated Class Participation \& Attendance}} \\
+    \vspace{1in}
+    \textbf{Project Team Members:} \\
+    \vspace{0.2in}
+    \begin{tabular}{ll}
+        24K-1033  \\
+        24K-0851 \\
+        24K-0956 \\
+    \end{tabular} \\
+    \vspace{1in}
+    \textbf{Supervision:} \\
+    Supervisor: Ms. Maarukh \\
+    \vfill
+    Submission Date: \today
+\end{titlepage}
+
+\newpage
+
+% --- Document History ---
+\section*{Document History}
+\begin{tabular}{|p{2cm}|p{4cm}|p{3cm}|p{5cm}|}
+\hline
+\textbf{Version} & \textbf{Name} & \textbf{Date} & \textbf{Description} \\ \hline
+01.00 & 24K-1033, 24K-0851, 24K-0956 & \today & Initial SRS draft matching Interaction Diagram v1.0 \\ \hline
+\end{tabular}
+
+\newpage
+\tableofcontents
+\newpage
+
+% --- Section 1: Introduction ---
+\section{Introduction}
+
+\subsection{Purpose of Document}
+This document specifies the requirements for the Autonomous AI Proxy Agent. The system leverages a multimodal architecture to monitor virtual classrooms via browser automation, interpret auditory and textual cues using LLMs, and autonomously respond to instructors. By providing a session link and time, the agent performs a full "proxy" of the student's presence, ensuring attendance is marked and queries are addressed without manual intervention.
+
+\subsection{Intended Audience}
+\begin{itemize}
+    \item \textbf{Project Supervisor (Ms. Maarukh):} To verify the technical logic of the multimodal pipeline and exception handling modules.
+    \item \textbf{Development Team:} To implement the orchestration between the \texttt{BotController}, \texttt{BrowserAutomation}, and AI APIs (Gemini/Groq).
+    \item \textbf{System Architects:} To ensure the stability of the \texttt{NotificationManager} and \texttt{ExceptionHandler} during long-duration sessions.
+\end{itemize}
+
+\subsection{Abbreviations}
+\begin{itemize}
+    \item \textbf{LLM}: Large Language Model (Gemini/Groq)
+    \item \textbf{STT}: Speech-to-Text (WhisperAI)
+    \item \textbf{BA}: Browser Automation (Chromium-based)
+    \item \textbf{VAD}: Voice Activity Detection
+    \item \textbf{JSON}: JavaScript Object Notation (for \texttt{schedule.json} configuration)
+\end{itemize}
+
+% --- Section 2: Overall System Description ---
+\section{Overall System Description}
+
+\subsection{Project Background}
+As online education becomes standardized, students often face scheduling conflicts. This project addresses the need for a "Digital Proxy"—an agent capable of not just joining a meeting, but actively listening for keywords (like the student's name), analyzing chat sentiment, and generating contextual responses that mimic human interaction.
+
+\subsection{Project Scope}
+The system architecture, as defined in the interaction diagram, encompasses:
+\begin{itemize}
+    \item \textbf{Automated Orchestration}: A \texttt{Scheduler} that polls \texttt{schedule.json} to trigger \texttt{BrowserAutomation} at specific class times.
+    \item \textbf{Multimodal Perception}: A \texttt{VoiceListener} using WhisperAI for real-time transcription and a \texttt{ChatAnalyzer} for monitoring textual interactions.
+    \item \textbf{Cognitive Reasoning}: An \texttt{AIResponder} that interfaces with Gemini and Groq APIs to generate context-aware replies when triggers are met.
+    \item \textbf{Attendance Management}: An \texttt{AttendanceManager} that evaluates confidence levels (90-95\% accuracy) before sending a "Present" confirmation.
+    \item \textbf{Remote Telemetry}: A \texttt{NotificationManager} that sends real-time alerts to the user via \texttt{TelegramBotAPI} regarding attendance status or class entry/exit.
+\end{itemize}
+
+\subsection{User Classes and Characteristics}
+The system is designed for students who require a reliable, hands-free presence in digital environments. Users interact primarily through configuration files (\texttt{schedule.json}) and receive feedback via Telegram.
+
+% --- Section 3: External Interface Requirements ---
+\section{External Interface Requirements}
+
+\subsection{User Interfaces}
+\begin{itemize}
+    \item \textbf{CLI / Startup Script}: The user initiates the bot via \texttt{run.bat}, which handles setup verification and credential loading.
+    \item \textbf{Telegram Interface}: The primary mobile interface for receiving "Attendance Marked" notifications or "Class Missed" alerts.
+\end{itemize}
+
+\subsection{Software Interfaces}
+\begin{itemize}
+    \item \textbf{Browser Automation Layer}: Uses Chromium to launch meeting URLs, toggle microphones, and manage browser captions.
+    \item \textbf{AI Reasoning APIs}: Dual-integration with \textbf{GeminiAPI} (primary) and \textbf{GroqAPI} (fallback) for prompt-based response generation.
+    \item \textbf{Audio Processing}: Integration with \textbf{WhisperAI} for transcribing live classroom audio streams into text for LLM analysis.
+\end{itemize}
+
+\subsection{Hardware Interfaces}
+\begin{itemize}
+    \item \textbf{Virtual Audio Pipeline}: Requires a virtual audio driver to route system/browser output into the \texttt{VoiceListener} module.
+    \item \textbf{Network}: Persistent high-bandwidth connection to maintain the browser session and simultaneous API calls to LLM providers.
+\end{itemize}
+
+\newpage
+
+\newpage
+
+% --- Section 4: System Modeling & Use Cases ---
+\section{System Modeling and Use Cases}
+
+\subsection{Use Case Diagram Overview}
+The system's interactions are categorized into 7 primary functional use cases derived from the system architecture. These involve interactions between the \textbf{Student (User)}, the \textbf{Browser Automation Layer}, the \textbf{Multimodal Perception Pipeline (WhisperAI/Chat)}, and external actors like the \textbf{LLM Providers (Gemini/Groq)} and \textbf{Telegram API}.
+
+\vspace{1cm}
+\begin{figure}[h!]
+    \centering
+    \framebox[\textwidth]{\vbox to 9cm{\vfill \centering
+        \textbf{UML Use Case Diagram: Autonomous AI Proxy Agent} \\
+        \vspace{0.5cm}
+        \begin{itemize}
+            \item \textbf{UC-01:} Automated Session Scheduling \& Launch
+            \item \textbf{UC-02:} Multimodal Classroom Monitoring (Audio/Chat)
+            \item \textbf{UC-03:} Attendance Verification \& Response Logic
+            \item \textbf{UC-04:} Contextual Query Processing (LLM Reasoning)
+            \item \textbf{UC-05:} API Failover \& Redundancy Management
+            \item \textbf{UC-06:} Remote Telemetry \& Telegram Notification
+            \item \textbf{UC-07:} Session Exit \& Resource Cleanup
+        \end{itemize}
+    \vfill}}
+    \caption{Use Case Diagram showing the flow from schedule initialization to autonomous interaction and notification.}
+    \label{fig:use_case}
+\end{figure}
+\vspace{1cm}
+
+\subsection{Detailed Use Case Tables}
+
+% --- Use Case 1 ---
+\subsubsection{UC-01: Automated Session Scheduling \& Launch}
+\begin{longtable}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Use Case ID} & UC-01 \\ \hline
+\textbf{Primary Actor} & Student (User) \\ \hline
+\textbf{Pre-conditions} & \texttt{schedule.json} is configured; \texttt{run.bat} executed. \\ \hline
+\textbf{Main Flow} & 1. Scheduler polls the JSON file for class time. 2. BotController triggers BrowserAutomation. 3. System launches Chromium and joins meeting via URL. \\ \hline
+\end{longtable}
+
+% --- Use Case 2 ---
+\subsubsection{UC-02: Multimodal Classroom Monitoring}
+\begin{longtable}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Use Case ID} & UC-02 \\ \hline
+\textbf{Primary Actor} & VoiceListener / ChatAnalyzer \\ \hline
+\textbf{Secondary Actor} & WhisperAI \\ \hline
+\textbf{Main Flow} & 1. VoiceListener captures raw audio stream. 2. WhisperAI transcribes audio to text. 3. ChatAnalyzer scans meeting chat for name/keywords. \\ \hline
+\end{longtable}
+
+% --- Use Case 3 ---
+\subsubsection{UC-03: Attendance Verification \& Response}
+\begin{longtable}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Use Case ID} & UC-03 \\ \hline
+\textbf{Primary Actor} & AttendanceManager \\ \hline
+\textbf{Main Flow} & 1. System detects "attendance" or "name" trigger. 2. AttendanceManager evaluates trigger accuracy (90-95\% confidence). 3. System types "Present" or triggers vocal confirmation. \\ \hline
+\end{longtable}
+
+% --- Use Case 4 ---
+\subsubsection{UC-04: Contextual Query Processing}
+\begin{longtable}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Use Case ID} & UC-04 \\ \hline
+\textbf{Primary Actor} & AIResponder \\ \hline
+\textbf{Secondary Actor} & Gemini / Groq API \\ \hline
+\textbf{Main Flow} & 1. System identifies a question directed at the student. 2. Text/Context sent to LLM. 3. LLM generates a human-like response for the meeting. \\ \hline
+\end{longtable}
+
+% --- Use Case 5 ---
+\subsubsection{UC-05: API Failover Management}
+\begin{longtable}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Use Case ID} & UC-05 \\ \hline
+\textbf{Primary Actor} & ExceptionHandler \\ \hline
+\textbf{Main Flow} & 1. Primary API (Gemini) fails or returns error. 2. ExceptionHandler catches error and logs to file. 3. System automatically switches to GroqAPI to maintain session. \\ \hline
+\end{longtable}
+
+% --- Use Case 6 ---
+\subsubsection{UC-06: Remote Telemetry \& Notification}
+\begin{longtable}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Use Case ID} & UC-06 \\ \hline
+\textbf{Primary Actor} & NotificationManager \\ \hline
+\textbf{Secondary Actor} & Telegram API \\ \hline
+\textbf{Main Flow} & 1. System confirms attendance marked or class joined. 2. NotificationManager formats a status alert. 3. User receives real-time update on Telegram mobile app. \\ \hline
+\end{longtable}
+
+% --- Use Case 7 ---
+\subsubsection{UC-07: Session Exit \& Resource Cleanup}
+\begin{longtable}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Use Case ID} & UC-07 \\ \hline
+\textbf{Primary Actor} & BotController \\ \hline
+\textbf{Post-conditions} & Browser process killed; network resources released. \\ \hline
+\textbf{Main Flow} & 1. Exit condition met (e.g., participants < 5 or class time elapsed). 2. BotController sends leave command. 3. System returns to polling state for next class. \\ \hline
+\end{longtable}
+
+\newpage
+% --- Section 4: Functional Requirements ---
+\section{Functional Requirements}
+
+\subsection{Session Automation and Control}
+\begin{itemize}
+    \item \textbf{FR-01: Automated Scheduling}: The system shall poll the \texttt{schedule.json} file to identify upcoming sessions and trigger the \texttt{BotController} at the exact timestamp.
+    \item \textbf{FR-02: Browser Orchestration}: The system must autonomously launch a Chromium instance, navigate to meeting URLs, and manage UI elements (toggling mic/camera and enabling captions).
+    \item \textbf{FR-03: Dynamic Exit Logic}: The system shall monitor the participant count and automatically terminate the session if the count drops below 5 or if the scheduled duration plus a 5-minute buffer is reached.
+\end{itemize}
+
+\subsection{Multimodal Perception and Response}
+\begin{itemize}
+    \item \textbf{FR-04: Real-time Audio Transcription}: The system shall utilize WhisperAI to transcribe live audio streams into text with a focus on detecting "name" or "attendance" keywords.
+    \item \textbf{FR-05: Collaborative Chat Analysis}: The system must monitor meeting chat boxes for specific patterns and high-frequency "Present" bursts to trigger attendance responses.
+    \item \textbf{FR-06: Dual-LLM Reasoning}: The \texttt{AIResponder} shall generate context-aware answers to teacher queries by querying GeminiAPI (primary) or GroqAPI (fallback).
+\end{itemize}
+
+\subsection{Attendance and Notification}
+\begin{itemize}
+    \item \textbf{FR-07: Attendance Verification}: The system must evaluate triggers with an accuracy threshold of 90-95\% before executing an "Attendance Marked" action.
+    \item \textbf{FR-08: Remote Status Updates}: The system shall send real-time event logs (e.g., "Class Joined," "Attendance Marked," "Class Missed") to the user via the \texttt{TelegramBotAPI}.
+\end{itemize}
+
+% --- Section 5: Non-Functional Requirements ---
+\section{Non-Functional Requirements}
+
+\subsection{Performance and Latency}
+\begin{itemize}
+    \item \textbf{Processing Speed}: The conversion from raw audio stream to WhisperAI transcription must occur within a sub-2.0 second window to ensure response relevance.
+    \item \textbf{API Latency}: The failover mechanism between Gemini and Groq must complete within 1.5 seconds to prevent awkward silences in the meeting.
+    \item \textbf{Resource Footprint}: The browser automation must run efficiently on systems with 4GB to 8GB of RAM without causing audio stuttering.
+\end{itemize}
+
+\subsection{Reliability and Resilience}
+\begin{itemize}
+    \item \textbf{Redundancy}: If the primary LLM API fails, the \texttt{ExceptionHandler} must successfully resume the query using the secondary provider without session termination.
+    \item \textbf{Network Recovery}: The system shall attempt to rejoin the meeting automatically if a temporary network failure is detected by the \texttt{Scheduler}.
+    \item \textbf{Logging}: All errors, API failures, and transaction timestamps must be logged to \texttt{log.txt} for post-session auditing.
+\end{itemize}
+
+\subsection{Security and Data Integrity}
+\begin{itemize}
+    \item \textbf{Credential Isolation}: Meeting links and API keys must be loaded from local environment configurations to prevent data leakage.
+    \item \textbf{Zero-Trust Communication}: Data sent to the \texttt{AIResponder} must be sanitized to prevent prompt injection from meeting chat participants.
+\end{itemize}
+
+\subsection{Resource Management}
+To optimize system health, the "End all connections" protocol must be strictly enforced. Upon meeting exit, the system must kill all Chromium sub-processes and close API sockets to prevent memory leaks and unnecessary billing from LLM providers.
+
+\end{document}

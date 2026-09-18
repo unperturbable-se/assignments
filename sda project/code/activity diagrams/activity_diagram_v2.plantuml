@@ -1,0 +1,94 @@
+@startuml
+skinparam backgroundColor transparent
+skinparam DefaultFontColor #333
+skinparam shadowing false
+skinparam ArrowColor #2c3e50
+
+title Interaction Sequence: AI Smart Study Bot
+
+actor "Student (User)" as user
+participant "BotController" as ctrl
+database "ScheduleConfig (JSON)" as json
+participant "Scheduler" as sched
+participant "BrowserAutomation" as browser
+participant "WhisperAI" as whisper
+participant "VoiceListener" as voice
+participant "ChatAnalyzer" as chat
+participant "AttendanceManager" as att
+participant "AIResponder" as responder
+participant "GeminiAPI" as gem
+participant "GroqAPI" as groq
+participant "NotificationManager" as notif
+participant "TelegramBotAPI" as telegram
+participant "ExceptionHandler" as ex
+
+' 1. INITIALIZATION
+user -> ctrl : run(RUN.BAT)
+ctrl -> ctrl : SMART_SETUP()
+ctrl -> ctrl : VERIFY_INSTALL()
+alt setup failed
+    ctrl -> user : retrySetup()
+end
+
+' 2. CONFIGURATION
+user -> json : googleLogin()
+user -> json : configureSchedule()
+json -> ctrl : configLoaded()
+
+' 3. SCHEDULING
+ctrl -> sched : startScheduler()
+sched -> json : readSchedule()
+json --> sched : return(class_time, link)
+
+loop polling
+    sched -> sched : pollTime()
+    alt time == class_time
+        sched -> browser : triggerJoin(link)
+    else 20min late
+        sched -> sched : markClassMissed()
+        sched -> notif : sendNotification("Class Missed")
+    end
+end
+
+' 4. CLASS OPERATIONS
+browser -> browser : launchChromium()
+browser -> browser : setupMeeting (Mute Mic/Cam, Enable Captions)
+browser -> notif : notifyJoined()
+
+par Monitoring
+    browser -> voice : startVoiceMonitor()
+    voice -> whisper : transcribeAudio()
+    whisper --> voice : return(transcript)
+
+    browser -> chat : startChatMonitor()
+    chat -> chat : scanMessage()
+end
+
+' 5. ATTENDANCE & AI RESPONSE
+alt Keyword/Name Detected
+    voice -> att : triggerAttendance("voice/name")
+else Burst Messages (>4)
+    chat -> att : triggerAttendance("chat")
+end
+
+att -> browser : typeInChat("Present")
+att -> notif : sendNotification("Attendance Marked")
+
+voice -> responder : forwardQuestion()
+responder -> gem : sendQuestion(text)
+alt Gemini Success
+    gem --> responder : return(answer)
+else Gemini Failure
+    responder -> groq : sendQuestion(text)
+    groq --> responder : return(answer)
+end
+responder -> browser : typeInChat(answer)
+
+' 6. NOTIFICATIONS & EXIT
+notif -> telegram : telegramAlert(Event Message)
+
+ctrl -> browser : checkExitConditions (Participants < 5)
+browser -> ctrl : confirmLeft(duration)
+ctrl -> notif : sendSummary(duration)
+
+@enduml
