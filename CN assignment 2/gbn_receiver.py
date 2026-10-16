@@ -27,7 +27,7 @@ client_socket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 client_socket.bind(('127.0.0.1',5678))
 server_socket=('127.0.0.1',1234)
 
-for i in range(6):
+for i in range(200):
     while True:
         packet,addr=recieve_packet(client_socket)
         if packet["sequence"]==i:
