@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Divide &amp; Conquer Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- was: <link rel="stylesheet" href="style.css"> -->
+  <link rel="stylesheet" href="/static/styles.css">
+
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">÷</div>
+      <div>
+        <h1>Divide &amp; Conquer Visualizer</h1>
+        <p>Closest pair of points &amp; Karatsuba integer multiplication</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card controls">
+      <div class="control-row">
+        <label class="field">
+          <span class="field-label">Algorithm</span>
+          <select id="algo">
+            <option value="closest">Closest pair of points</option>
+            <option value="mult">Integer multiplication</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Input file</span>
+          <select id="file"></select>
+        </label>
+        <button id="run" class="primary">
+          <span>Run</span><span class="arrow">→</span>
+        </button>
+      </div>
+      <div id="status" class="status"></div>
+    </section>
+
+    <section id="closest-view" class="card">
+      <div class="card-header">
+        <h2>Closest pair of points</h2>
+        <span class="badge">O(n log n)</span>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="plot" width="900" height="520"></canvas>
+      </div>
+      <div class="slider">
+        <button id="play" class="secondary"><span class="play-icon">▶</span> Play</button>
+        <div class="slider-group">
+          <label>Recursion depth <strong id="depth-label">0</strong></label>
+          <input id="depth" type="range" min="0" max="0" value="0">
+        </div>
+      </div>
+      <div id="closest-stats" class="rows"></div>
+    </section>
+
+    <section id="mult-view" class="card hidden">
+      <div class="card-header">
+        <h2>Karatsuba multiplication</h2>
+        <span class="badge">O(n<sup>1.585</sup>)</span>
+      </div>
+      <div id="mult-steps" class="rows"></div>
+    </section>
+  </main>
+
+<!-- was: <script src="script.js"></script> -->
+<script src="/static/script.js"></script>
+</body>
+</html>
